@@ -7,7 +7,7 @@
 
 struct Node : public std::enable_shared_from_this<Node> {
     typedef std::shared_ptr<Node> Ptr;
-    enum Type { Key, Value };
+    enum Type { DLL, FUNC };
     Node *        parent;
     QList<Node *> children;
     QString       text;
@@ -18,6 +18,9 @@ struct Node : public std::enable_shared_from_this<Node> {
         parent = nullptr;
     }
     ~Node() {
+        clear();
+    }
+    void clear() {
         qDeleteAll(children);
         children.clear();
     }
@@ -33,7 +36,7 @@ public:
     QMap<int, QVariant>   itemData(const QModelIndex &index) const;
     bool hasChildren(const QModelIndex &parent = QModelIndex()) const;
     QModelIndex rootIndex();
-    void parse(Pe_Binary_t* pe);
+    void setData(Pe_Binary_t* pe);
 private:
     Node::Ptr root_item_;
     Node* root_node_;

@@ -4,14 +4,13 @@
 MainWindow::MainWindow(QTreeView *parent) : QTreeView(parent)
 {
     model_ = new PeModel(this);
-    //model_->parse(pe_parse("D:/BaiduNetdisk_6.7.3.exe"));
     setModel(model_);
     setAcceptDrops(true);
     setRootIndex(model_->rootIndex());
     setDragDropMode(DragDropMode::DropOnly);
     header()->hide();
     resize(800,600);
-    expandAll();
+    setAutoScroll(true);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e)
@@ -34,13 +33,23 @@ void MainWindow::dragMoveEvent(QDragMoveEvent *e)
 void MainWindow::dropEvent(QDropEvent *e)
 {
     QString file_name = e->mimeData()->urls().first().toLocalFile();
-    delete model_;
     if (pe_)
         pe_binary_destroy(pe_);
 
     pe_ = pe_parse(file_name.toLocal8Bit().data());
-    model_ = new PeModel(this);
-    model_->parse(pe_);
-    setModel(model_);
+    model_->setData(pe_);
     setRootIndex(model_->rootIndex());
+}
+
+void MainWindow::drawRow(QPainter *painter, const QStyleOptionViewItem &options, const QModelIndex &index) const
+{
+    Node* n = static_cast<Node*>(index.internalPointer());
+    if (n) {
+        if (n->type == Node::DLL) {
+            QApplication::style()->drawItemText(painter,options.rect,options.displayAlignment,QApplication::palette(),true,"DLL");
+        } else if (n->type == Node::FUNC) {
+            QApplication::style()->drawItemText(painter,options.rect,options.displayAlignment,QApplication::palette(),true,"FUNC");
+        }
+    }
+    QTreeView::drawRow(painter,options,index);
 }

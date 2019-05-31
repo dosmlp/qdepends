@@ -87,12 +87,14 @@ QModelIndex PeModel::rootIndex()
     return createIndex(0,0,root_item_.get());
 }
 
-void PeModel::parse(Pe_Binary_t* pe) {
+void PeModel::setData(Pe_Binary_t* pe) {
+    if (pe == nullptr) return;
     beginResetModel();
-    root_item_->children.clear();
+    root_item_->clear();
     root_node_         = new Node(QString(pe->name)+"("+QString(MACHINE_TYPES_to_string(pe->header.machine))+")");
     root_node_->parent = root_item_.get();
     root_node_->row = 0;
+    root_node_->type = Node::DLL;
     root_item_->children.append(root_node_);
 
     Pe_Import_t **imports = pe->imports;
@@ -100,6 +102,7 @@ void PeModel::parse(Pe_Binary_t* pe) {
         Node *dll = new Node(imports[ i ]->name);
         dll->parent = root_node_;
         dll->row = i;
+        dll->type = Node::DLL;
         root_node_->children.append(dll);
 
         Pe_ImportEntry_t **entries = imports[ i ]->entries;
@@ -108,12 +111,12 @@ void PeModel::parse(Pe_Binary_t* pe) {
                 Node *func = new Node(entries[ j ]->name);
                 func->parent = dll;
                 func->row = j;
+                func->type = Node::FUNC;
                 dll->children.append(func);
             }
         }
     }
     endResetModel();
-    emit dataChanged(createIndex(0,0,root_item_.get()),createIndex(0,0,root_item_.get()));
 }
 
 Node *PeModel::getNode(const QModelIndex &index) const {
